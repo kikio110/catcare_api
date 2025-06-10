@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatCare - Deteksi Penyakit Kulit Kucing</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-white font-sans text-gray-800">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center px-6 py-4 shadow-md">
+    <div class="flex items-center gap-2">
+      <img src="assets/images/avatar_cat.png" alt="CatCare Logo" class="h-10 w-10" />
+      <h1 class="text-2xl font-bold text-gray-700">CatCare</h1>
+    </div>
+    <p class="text-sm text-gray-500">Karena kucing sehat itu bahagia 🐾</p>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="flex flex-col-reverse md:flex-row items-center justify-between px-6 py-10 bg-gradient-to-b from-white to-blue-50">
+    <div class="md:w-1/2">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4">Deteksi Dini Penyakit Kulit Kucing</h2>
+      <p class="mb-6 text-gray-600">Unggah foto kucingmu dan temukan gejala penyakit kulit secara instan.</p>
+
+      <div class="border-2 border-dashed border-blue-300 p-6 rounded-lg text-center bg-blue-50">
+        <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleUpload(event)" />
+        <p class="text-sm text-gray-500 mb-2">JPG, PNG max 5MB</p>
+        <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded">Pilih Gambar</button>
+      </div>
+    </div>
+    <img src="assets/images/hero.png" alt="Cute Cat Illustration" class="w-64 md:w-96" />
+  </section>
+
+  <!-- Analysis Result -->
+  <section class="px-6 py-10 bg-white">
+    <div class="bg-blue-50 p-6 rounded-lg shadow-md text-center" id="resultSection">
+      <div id="resultContent">
+        <img src="assets/images/cat.png" class="mx-auto w-20 h-20" />
+        <p class="mt-2 text-gray-500">Belum ada gambar yang diunggah</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tips Section -->
+  <section class="px-6 py-10 bg-blue-50">
+    <h3 class="text-2xl font-bold mb-6">Tips Merawat Kesehatan Kulit Kucing</h3>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <img src="assets/images/bathroom.png" alt="Bath Icon" class="mx-auto w-12 h-12 mb-2" />
+        <h4 class="font-semibold">Rajin Memandikan Kucing</h4>
+        <p class="text-sm text-gray-600">Memandikan kucing dengan sampo khusus kulit sensitif dapat mencegah jamur & kutu.</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <img src="assets/images/medical.png" alt="Ointment Icon" class="mx-auto w-12 h-12 mb-2" />
+        <h4 class="font-semibold">Gunakan Obat Topikal Aman</h4>
+        <p class="text-sm text-gray-600">Pastikan krim atau salep yang digunakan sudah direkomendasikan dokter hewan.</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <img src="assets/images/cat_food.png" alt="Food Icon" class="mx-auto w-12 h-12 mb-2" />
+        <h4 class="font-semibold">Perhatikan Makanan</h4>
+        <p class="text-sm text-gray-600">Alergi kulit bisa dipicu dari makanan. Beri makanan hipoalergenik bila perlu.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t py-4 text-center text-sm text-gray-500">
+    <p>Kelompok 4</p>
+    <p>© 2025 CatCare. All rights reserved.</p>
+  </footer>
+
+  <!-- Script -->
+  <script>
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (file && file.size <= 5 * 1024 * 1024) {
+        const imageUrl = URL.createObjectURL(file);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("http://localhost:5000/predict", {
+          method: "POST",
+          body: formData
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            alert("Terjadi kesalahan: " + data.error);
+            return;
+          }
+
+          const resultContent = document.getElementById("resultContent");
+          const confidencePercent = (data.confidence * 100).toFixed(2);
+
+          resultContent.innerHTML = `
+            <img src="${imageUrl}" alt="Uploaded Cat" class="w-48 h-48 object-cover mx-auto rounded mb-4" />
+            <h3 class="text-2xl font-semibold capitalize">${data.class}</h3>
+            <p class="text-xl text-blue-600 font-bold">${confidencePercent}%</p>
+            <div class="mt-4 bg-green-100 p-4 rounded text-left">
+              <h4 class="font-semibold">Analisis Awal</h4>
+              <p>${data.description}</p>
+            </div>
+          `;
+        })
+        .catch((error) => {
+          alert("Gagal mengunggah atau memproses gambar.");
+          console.error("Error:", error);
+        });
+      } else {
+        alert("Ukuran file terlalu besar. Maksimal 5MB.");
+      }
+    }
+  </script>
+
+</body>
+</html>
